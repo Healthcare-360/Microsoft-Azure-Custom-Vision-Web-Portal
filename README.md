@@ -1,4 +1,4 @@
-# Diabetic Retinopathy Detecion using Azure Custom Vision
+# Diabetic Retinopathy Detection using Azure Custom Vision
 
 ## Results using Prediction API
 
