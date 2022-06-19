@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <!--Import Google Icon Font-->
+    <link
+      href="https://fonts.googleapis.com/icon?family=Material+Icons"
+      rel="stylesheet"
+    />
+    <!-- Compiled and minified CSS -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css"
+    />
+
+    <!-- Main CSS File -->
+    <link rel="stylesheet" href="style.css" />
+
+    <!--Let browser know website is optimized for mobile-->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <link
+      rel="apple-touch-icon"
+      sizes="57x57"
+      href="Resources/favicon/apple-icon-57x57.png"
+    />
+    <link
+      rel="apple-touch-icon"
+      sizes="60x60"
+      href="Resources/favicon/apple-icon-60x60.png"
+    />
+    <link
+      rel="apple-touch-icon"
+      sizes="72x72"
+      href="Resources/favicon/apple-icon-72x72.png"
+    />
+    <link
+      rel="apple-touch-icon"
+      sizes="76x76"
+      href="Resources/favicon/apple-icon-76x76.png"
+    />
+    <link
+      rel="apple-touch-icon"
+      sizes="114x114"
+      href="Resources/favicon/apple-icon-114x114.png"
+    />
+    <link
+      rel="apple-touch-icon"
+      sizes="120x120"
+      href="Resources/favicon/apple-icon-120x120.png"
+    />
+    <link
+      rel="apple-touch-icon"
+      sizes="144x144"
+      href="Resources/favicon/apple-icon-144x144.png"
+    />
+    <link
+      rel="apple-touch-icon"
+      sizes="152x152"
+      href="Resources/favicon/apple-icon-152x152.png"
+    />
+    <link
+      rel="apple-touch-icon"
+      sizes="180x180"
+      href="Resources/favicon/apple-icon-180x180.png"
+    />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="192x192"
+      href="Resources/favicon/android-icon-192x192.png"
+    />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="32x32"
+      href="Resources/favicon/favicon-32x32.png"
+    />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="96x96"
+      href="Resources/favicon/favicon-96x96.png"
+    />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="16x16"
+      href="Resources/favicon/favicon-16x16.png"
+    />
+    <link rel="manifest" href="Resources/favicon/manifest.json" />
+    <meta name="msapplication-TileColor" content="#ffffff" />
+    <meta name="msapplication-TileImage" content="/ms-icon-144x144.png" />
+    <meta name="theme-color" content="#ffffff" />
+  </head>
+
+  <body>
+    <!--Navigation for normal screens-->
+
+    <nav id="navigation">
+      <div class="nav-wrapper">
+        <a href="#" class="brand-logo center">Custom Vision</a>
+        <ul id="nav-mobile" class="left hide-on-med-and-down"></ul>
+      </div>
+    </nav>
+
+    <!--Navigation ends-->
+
+    <div class="container">
+      <!-- Page Content goes here -->
+      <video id="video" autoplay></video>
+      <br />
+      <button id="capture">Capture image</button>
+      <div id="detected"></div>
+
+      <script type="text/javascript">
+        window.addEventListener("DOMContentLoaded", function () {
+          // Stream from the camera to the video player
+          var video = document.getElementById("video");
+
+          if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+            const getImage = async () => {
+              video.srcObject = await navigator.mediaDevices.getUserMedia({
+                video: true,
+              });
+              video.play();
+            };
+            getImage();
+          }
+
+          // When the user clicks the "Capture image" button, capture the image and
+          // POST it to the back end Flask app
+          document
+            .getElementById("capture")
+            .addEventListener("click", function () {
+              // Draw the image on a canvas so it can be captured as base64 encoded binary data
+              var canvas = document.createElement("canvas");
+              canvas.width = 640;
+              canvas.height = 480;
+
+              var context = canvas.getContext("2d");
+              context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+              var data = {
+                image_base64: canvas.toDataURL("image/png"),
+              };
+
+              // Make the POST request and get back the result
+              const getResult = async () => {
+                var result = await fetch("process_image", {
+                  method: "POST",
+                  body: JSON.stringify(data),
+                  headers: { "Content-Type": "application/json" },
+                });
+                var jsonResult = await result.json();
+                document.getElementById("detected").innerHTML =
+                  "<strong>You played " +
+                  jsonResult["predicted"] +
+                  "</strong> with " +
+                  jsonResult["probability"] +
+                  "% probability. <br>" +
+                  "<strong>Your opponent played " +
+                  jsonResult["opponent"] +
+                  "</strong>";
+              };
+              getResult();
+            });
+        });
+      </script>
+
+      <div class="file-field input-field">
+        <div class="btn">
+          <span>File</span>
+          <input type="file" accept="image/*" id="capture" capture="camera" />
+        </div>
+        <div class="file-path-wrapper">
+          <input
+            class="file-path validate"
+            type="text"
+            placeholder="Upload an image"
+          />
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col l4 xl4"></div>
+        <div class="picture col s12 l4 m12 xl4">
+          <div id="PicturePreview">
+            <img id="PredictedPicture" src="" alt="" />
+          </div>
+        </div>
+        <div class="col l4 xl4"></div>
+      </div>
+
+      <div class="row">
+        <div class="col l4 xl4"></div>
+        <div class="button col s12 l4 m12 xl4">
+          <div class="PredictButton">
+            <button
+              id="button"
+              class="waves-effect waves-light btn-large center-align"
+              type="submit"
+              name="action"
+            >
+              Predict
+              <i class="material-icons right">send</i>
+            </button>
+          </div>
+        </div>
+        <div class="col l4 xl4"></div>
+      </div>
+
+      <div class="row">
+        <div class="col l4 xl4"></div>
+        <div class="col col s12 l4 m12 xl4">
+          <table class="centered" id="myTable">
+            <thead>
+              <tr>
+                <th>Type of Diabetes</th>
+                <th>Accuracy</th>
+              </tr>
+            </thead>
+
+            <tbody></tbody>
+          </table>
+        </div>
+        <div class="col l4 xl4"></div>
+      </div>
+    </div>
+
+    <!-- Main JavaScript File -->
+    <script src="script.js"></script>
+
+    <!-- Compiled and minified JavaScript -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+  </body>
+</html>
